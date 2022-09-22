@@ -668,39 +668,42 @@ var config = {
   };
   
 function checkInventory() {
-  axios(config)
-  .then(async function (response) {
-    let vehicles = response.data.vehicles;
-    for (var i = 0; i < vehicles.length; i++) {
+    axios(config)
+    .then(async function (response) {
+        let vehicles = response.data.vehicles;
+        if (vehicles.length > 0) {
+            for (var i = 0; i < vehicles.length; i++) {
 
-        // Find the vehicle in the database
-        let originalVehicle = await Vehicle.findOne({ vin: vehicles[i].vin });
-        if (!originalVehicle) {
+                // Find the vehicle in the database
+                let originalVehicle = await Vehicle.findOne({ vin: vehicles[i].vin });
+                if (!originalVehicle) {
 
-            let dealer = getDealerById(vehicles[i].dealerCode);
+                    let dealer = getDealerById(vehicles[i].dealerCode);
 
-            const vehicle = new Vehicle({
-                vin: vehicles[i].vin,
-                year: vehicles[i].year.year,
-                model: vehicles[i].model.model,
-                name: vehicles[i].trim.name,
-                msrp: vehicles[i].msrp,
-                dealerPrice: vehicles[i].dealerPrice,
-                exteriorColor: vehicles[i].exteriorColor.name,
-                interiorColor: vehicles[i].interiorColor.name,
-                range: vehicles[i].range,
-                dealerCode: vehicles[i].dealerCode
-            });
-            vehicle.save().then(() => console.log('Vehicle added'));
-            sendMessage(vehicle, dealer);
+                    const vehicle = new Vehicle({
+                        vin: vehicles[i].vin,
+                        year: vehicles[i].year.year,
+                        model: vehicles[i].model.model,
+                        name: vehicles[i].trim.name,
+                        msrp: vehicles[i].msrp,
+                        dealerPrice: vehicles[i].dealerPrice,
+                        exteriorColor: vehicles[i].exteriorColor.name,
+                        interiorColor: vehicles[i].interiorColor.name,
+                        range: vehicles[i].range,
+                        dealerCode: vehicles[i].dealerCode
+                    });
+                    vehicle.save().then(() => {});
+                    sendMessage(vehicle, dealer);
+                } else {
+                    //console.log('Vehicle already exists');
+                }
+            }
         } else {
-            console.log('Vehicle already exists');
+            console.log(`[${new Date().toJSON()}] No new vehicle matches`);
         }
-    }
-  })
-  .catch(function (error) {
-    console.log(error);
-  });
+    }).catch(function (error) {
+        console.log(error);
+    });
 }
   
 getDealerById = (dealerCode) => {
@@ -717,10 +720,12 @@ sendMessage = (vehicle, dealer) => {
 
     client.messages
     .create({body: message, from: process.env.FROM_PHONE_NUMBER, to: process.env.TO_PHONE_NUMBER})
-    .then(message => console.log(message.sid))
+    .then(message => {
+        console.log(`[${new Date().toJSON()}] Vehicle added - ${vehicle.vin}`);
+    })
     .catch(err => console.log(err));
 }
 
-cron.schedule('*/1 * * * *', () => {
+cron.schedule('*/10 * * * *', () => {
     checkInventory();
 });
