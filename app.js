@@ -695,12 +695,13 @@ function checkInventory() {
                     vehicle.save().then(() => {});
                     sendMessage(vehicle, dealer);
                 } else {
-                    //console.log('Vehicle already exists');
+                    console.log(`[${new Date().toJSON()}] No new vehicle matches`);
                 }
             }
         } else {
-            console.log(`[${new Date().toJSON()}] No new vehicle matches`);
+            console.log(`[${new Date().toJSON()}] No vehicle matches`);
         }
+
     }).catch(function (error) {
         console.log(error);
     });
